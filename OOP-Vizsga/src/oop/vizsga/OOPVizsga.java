@@ -8,66 +8,93 @@ import com.google.gson.JsonSyntaxException;
 import java.io.FileReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.*;
     
 public class OOPVizsga 
 {
     public static void main(String[] args) 
     {
         String filePath = "C:/Users/And8And/Desktop/data.json";
+        List<Course> courses = new ArrayList<>();
+        List<Student> allStudents = new ArrayList<>();
+        List<Course> invalidCourses = new ArrayList<>();
         
         try (FileReader reader = new FileReader(filePath))
         {
             Gson gson = new Gson();
             JsonObject root = gson.fromJson(reader, JsonObject.class);
             
-            String term = getSafeString(root, "term");
-            System.out.println("Term: " + term);
-            
-            JsonObject dept = root.getAsJsonObject("department");
-            String depCode = getSafeString(dept, "code");
-            String depName = getSafeString(dept, "name");
-            System.out.println("Department: " + depCode + " - " + depName);
-            
-            JsonArray courses = root.getAsJsonArray("courses");
-            if (courses != null) 
-            {
-                System.out.println("\n--- Courses ---");
-                for (int i = 0; i < courses.size(); i++) 
-                {
-                    JsonObject c = courses.get(i).getAsJsonObject();
+            JsonArray coursesArray = root.getAsJsonArray("courses");
+            if (coursesArray != null) {
+                for (int i = 0; i < coursesArray.size(); i++) {
+                    JsonObject c = coursesArray.get(i).getAsJsonObject();
 
                     String code = getSafeString(c, "code");
                     String title = getSafeString(c, "title");
                     int credits = getSafeInt(c, "credits");
+                    String type = getSafeString(c, "type");
 
-                    System.out.println(code + " | " + title + " | " + credits + " credits");
-                    
-                    JsonObject instr = c.getAsJsonObject("instructor");
-                    if (instr != null) 
-                    {
-                        System.out.println("  Instructor: " + getSafeString(instr, "name"));
-                    }
-                    
+                    // Schedule
+                    JsonObject sched = c.getAsJsonObject("schedule");
+                    String day = getSafeString(sched, "day");
+                    String start = getSafeString(sched, "start");
+                    String end = getSafeString(sched, "end");
+                    String room = getSafeString(sched, "room");
+
+                    // Instructor
+                    JsonObject instrObj = c.getAsJsonObject("instructor");
+                    String instrId = getSafeString(instrObj, "id");
+                    String instrName = getSafeString(instrObj, "name");
+                    Instructor instructor = new Instructor(instrId, instrName);
+
+                    // Students
+                    List<Student> students = new ArrayList<>();
                     JsonElement studentsElem = c.get("students");
                     if (studentsElem != null && studentsElem.isJsonArray()) 
                     {
                         JsonArray sArr = studentsElem.getAsJsonArray();
                         for (int j = 0; j < sArr.size(); j++) 
                         {
-                            JsonObject sObj = sArr.getAsJsonObject();
+                            JsonObject sObj = sArr.get(j).getAsJsonObject();
+                            String sId = getSafeString(sObj, "id");
                             String sName = getSafeString(sObj, "name");
                             int sYear = getSafeInt(sObj, "year");
-                            System.out.println("    Student: " + sName + " (" + sYear + ")");
+                            String sGroup = getSafeString(sObj, "group");
+
+                            // Grades
+                            List<Integer> grades = new ArrayList<>();
+                            JsonArray gArr = sObj.getAsJsonArray("grades");
+                            if (gArr != null) 
+                            {
+                                for (int k = 0; k < gArr.size(); k++) 
+                                {
+                                    grades.add(gArr.get(k).getAsInt());
+                                }
+                            }
+
+                            Student student = new Student(sId, sName, sYear, sGroup, grades);
+                            students.add(student);
+                            
+                            if (!allStudents.contains(student)) 
+                            {
+                                allStudents.add(student);
+                            }
                         }
                     }
-                    else
+
+                    Course course = new Course(code, title, credits, type, day, start, end, room, instructor, students, code);
+
+                    if (credits <= 0 || day.equals("Unknown") || start.equals("??:??") || end.equals("??:??")) 
                     {
-                        System.out.println("No valid student list for this course");
+                        invalidCourses.add(course);
+                    } else 
+                    {
+                        courses.add(course);
                     }
                 }
             }
-        } 
-        catch (FileNotFoundException e) 
+
+        } catch (FileNotFoundException e) 
         {
             System.err.println("File not found: " + e.getMessage());
         } 
@@ -77,9 +104,9 @@ public class OOPVizsga
         } 
         catch (JsonSyntaxException e) 
         {
-            System.err.println("JSON is malformed: " + e.getMessage());
-        }     
-    }   
+            System.err.println("JSON malformed: " + e.getMessage());
+        }   
+    }
     
     private static String getSafeString(JsonObject obj, String key) 
     {
