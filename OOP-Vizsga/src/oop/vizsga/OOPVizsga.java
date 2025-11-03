@@ -32,9 +32,9 @@ public class OOPVizsga
             if (courses != null) 
             {
                 System.out.println("\n--- Courses ---");
-                for (JsonElement ce : courses) 
+                for (int i = 0; i < courses.size(); i++) 
                 {
-                    JsonObject c = ce.getAsJsonObject();
+                    JsonObject c = courses.get(i).getAsJsonObject();
 
                     String code = getSafeString(c, "code");
                     String title = getSafeString(c, "title");
@@ -52,9 +52,9 @@ public class OOPVizsga
                     if (studentsElem != null && studentsElem.isJsonArray()) 
                     {
                         JsonArray sArr = studentsElem.getAsJsonArray();
-                        for (JsonElement se : sArr) 
+                        for (int j = 0; j < sArr.size(); j++) 
                         {
-                            JsonObject sObj = se.getAsJsonObject();
+                            JsonObject sObj = sArr.getAsJsonObject();
                             String sName = getSafeString(sObj, "name");
                             int sYear = getSafeInt(sObj, "year");
                             System.out.println("    Student: " + sName + " (" + sYear + ")");
