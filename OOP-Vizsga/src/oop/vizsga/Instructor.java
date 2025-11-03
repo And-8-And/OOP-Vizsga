@@ -27,8 +27,8 @@ public class Instructor extends BaseEntity implements Identifiable
     }
 
     @Override
-    public String toString() {
-        
+    public String toString() 
+    {
         return "Instructor{id=" + getId() + ", name='" + name + "'}";
     }
 }

@@ -9,6 +9,7 @@ import java.io.FileReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
+import java.io.PrintWriter;
     
 public class OOPVizsga 
 {
@@ -105,7 +106,66 @@ public class OOPVizsga
         catch (JsonSyntaxException e) 
         {
             System.err.println("JSON malformed: " + e.getMessage());
-        }   
+        }  
+        
+        try (PrintWriter writer = new PrintWriter("C:/Users/And8And/Desktop/report.txt"))
+        {
+            writer.println("=== ALL COURSES ===");
+            for (int i = 0; i < courses.size(); i++) 
+            {
+                Course c = courses.get(i);
+                writer.println(c);
+
+                for (int j = 0; j < c.getStudents().size(); j++) 
+                {
+                    Student s = c.getStudents().get(j);
+                    double weighted = 0.0;
+
+                    List<Integer> g = s.getGrades();
+                    if (g != null && !g.isEmpty()) 
+                    {
+                        int sum = 0;
+                        
+                        for (int k = 0; k < g.size(); k++) 
+                        {
+                            sum += g.get(k);
+                        }
+                        weighted = (double) sum / g.size();
+                    }
+
+                    writer.println("  Student: " + s.getName() + " | Weighted grade: " + String.format("%.2f", weighted));
+                }
+            }
+            
+            writer.println("\n=== TOP 2 STUDENTS ===");
+            allStudents.sort(new Comparator<Student>() 
+            {
+                public int compare(Student o1, Student o2) 
+                {
+                    return Double.compare(o2.averageGrade(), o1.averageGrade());
+                }
+            });
+
+            for (int i = 0; i < Math.min(2, allStudents.size()); i++) 
+            {
+                Student s = allStudents.get(i);
+                writer.println((i + 1) + ". " + s.getName() + " | Avg across courses: " + String.format("%.2f", s.averageGrade()));
+            }
+            
+            if (!invalidCourses.isEmpty()) 
+            {
+                writer.println("\n=== INVALID COURSES ===");
+                for (int i = 0; i < invalidCourses.size(); i++) 
+                {
+                    Course c = invalidCourses.get(i);
+                    writer.println(c);
+                }
+            }
+        }
+        catch (FileNotFoundException e) 
+        {
+            System.err.println("Cannot create report.txt: " + e.getMessage());
+        }
     }
     
     private static String getSafeString(JsonObject obj, String key) 
